@@ -11,6 +11,7 @@ public class InputReader : ScriptableObject, IPlayerActions
     public event Action<Vector2> OnPlayerMovement;
     public event Action<bool> OnPlayerSprint;
     public event Action<bool> OnPlayerCrouch;
+    public event Action<bool> OnPlayerAttack;
     public event Action OnPlayerLook;
     public event Action OnPlayerJump;
     // public event Action OnPlayerAttack;
@@ -37,9 +38,9 @@ public class InputReader : ScriptableObject, IPlayerActions
         playerInputActions.Player.Disable();
     }
 
-    public void OnAttack(InputAction.CallbackContext context)
+    public void OnAim(InputAction.CallbackContext context)
     {
-        // Nothing here
+        OnPlayerAttack?.Invoke(context.performed);
     }
 
     public void OnCrouch(InputAction.CallbackContext context)
@@ -79,6 +80,11 @@ public class InputReader : ScriptableObject, IPlayerActions
     }
 
     public void OnPrevious(InputAction.CallbackContext context)
+    {
+        // Nothing here
+    }
+
+    public void OnShoot(InputAction.CallbackContext context)
     {
         // Nothing here
     }
