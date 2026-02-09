@@ -31,4 +31,9 @@ public class PlayerAnimation : MonoBehaviour
     {
         playerAnimator.SetBool("Crouching", isCrouching);
     }
+
+    public void SetAiming(bool isAiming)
+    {
+        playerAnimator.SetBool("Aiming", isAiming);
+    }
 }

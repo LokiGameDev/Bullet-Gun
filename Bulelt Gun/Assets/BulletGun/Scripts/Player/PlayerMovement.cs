@@ -7,10 +7,11 @@ public class PlayerMovement : MonoBehaviour
     [Header("References")]
     [SerializeField] private InputReader inputReader;
     [SerializeField] private PlayerAnimation playerAnimation;
-    [SerializeField] private Transform playerMesh;
+    [SerializeField] private CameraMovement cameraMovement;
 
     [Header("Settings")]
     [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float rotationSpeed = 5f;
     [SerializeField] private float sprintMultiplier = 1f;
     [SerializeField] private float crouchMultiplier = 1f;
     [SerializeField] private float jumpForce = 2.5f;
@@ -49,6 +50,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandlePlayerJump()
     {
+        if(cameraMovement.IsAiming) {return;}
+
         if(IsGrounded())
         {
             playerRigidbody.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
@@ -69,6 +72,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandlePlayerCrouch(bool isCrouching)
     {
+        if(cameraMovement.IsAiming) {return;}
+        
         if(isCrouching)
         {
             playerAnimation.SetCrouching(true);
@@ -91,10 +96,15 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        Vector3 moveDirection = transform.forward * movementInput.y + transform.right * movementInput.x;
+        if(cameraMovement.IsAiming) {return;}
+
+        Vector3 moveDirection = transform.forward * movementInput.y* moveSpeed * sprintMultiplier * crouchMultiplier;
+        playerRigidbody.linearVelocity = new Vector3(moveDirection.x, playerRigidbody.linearVelocity.y, moveDirection.z);
+
+        Vector3 rotationDirection = new Vector3(0, movementInput.x, 0);
+        playerRigidbody.rotation *= Quaternion.Euler(rotationDirection * rotationSpeed * Time.fixedDeltaTime);
         
-        playerRigidbody.linearVelocity = moveDirection.normalized * moveSpeed * sprintMultiplier * crouchMultiplier + new Vector3(0, playerRigidbody.linearVelocity.y, 0);
-        RotatePlayerMesh(moveDirection);
+        //RotatePlayerMesh(moveDirection);
 
         if(playerAnimation!=null) playerAnimation.SetMovement(moveDirection.magnitude/2*sprintMultiplier);
     }
@@ -114,21 +124,13 @@ public class PlayerMovement : MonoBehaviour
 
     private void RotatePlayerMesh(Vector3 moveDirection)
     {
-        Vector3 lookDir = new Vector3(
-            moveDirection.x,
-            0f,
-            moveDirection.z
-        );
+        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(moveDirection == Vector3.zero ? transform.forward : moveDirection), Time.deltaTime * rotationSpeed);
+        // cameraPivot.rotation = transform.rotation;
+    }
 
-        if (lookDir.sqrMagnitude > 0.001f)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(lookDir);
-            playerMesh.transform.rotation = Quaternion.Slerp(
-                playerMesh.transform.rotation,
-                targetRotation,
-                10 * Time.deltaTime
-            );
-        }
+    public void SetAiming(bool isAiming)
+    {
+        playerAnimation.SetAiming(isAiming);
     }
 
     void OnDrawGizmosSelected()
