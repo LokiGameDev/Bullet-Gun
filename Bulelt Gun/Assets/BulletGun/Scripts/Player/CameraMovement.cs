@@ -54,6 +54,7 @@ public class CameraMovement : MonoBehaviour
         if(isAiming)
         {
             IsAiming = true;
+            playerMovement.MeshLookForward();
             currentCameraOffset = aimCameraOffset;
         }
         else

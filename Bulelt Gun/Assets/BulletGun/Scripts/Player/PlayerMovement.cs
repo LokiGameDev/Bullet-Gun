@@ -1,4 +1,4 @@
-using NUnit.Framework;
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,10 +8,12 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private InputReader inputReader;
     [SerializeField] private PlayerAnimation playerAnimation;
     [SerializeField] private CameraMovement cameraMovement;
+    [SerializeField] private GameObject playerMesh;
 
     [Header("Settings")]
     [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float rotationSpeed = 5f;
+    [SerializeField] private float rotationSpeed = 1f;
+    [SerializeField] private float meshRotationSpeed = 100f;
     [SerializeField] private float sprintMultiplier = 1f;
     [SerializeField] private float crouchMultiplier = 1f;
     [SerializeField] private float jumpForce = 2.5f;
@@ -98,20 +100,48 @@ public class PlayerMovement : MonoBehaviour
     {
         if(cameraMovement.IsAiming) {return;}
 
-        Vector3 moveDirection = transform.forward * movementInput.y* moveSpeed * sprintMultiplier * crouchMultiplier;
+        Vector3 moveDirection = ( (transform.forward * movementInput.y) + (transform.right * movementInput.x))* moveSpeed * sprintMultiplier * crouchMultiplier;
+
         playerRigidbody.linearVelocity = new Vector3(moveDirection.x, playerRigidbody.linearVelocity.y, moveDirection.z);
 
-        Vector3 rotationDirection = new Vector3(0, movementInput.x, 0);
-        playerRigidbody.rotation *= Quaternion.Euler(rotationDirection * rotationSpeed * Time.fixedDeltaTime);
-        
-        //RotatePlayerMesh(moveDirection);
+        if (movementInput != Vector2.zero)
+        {
+            RotatePlayerMesh(moveDirection);
+        }
 
-        if(playerAnimation!=null) playerAnimation.SetMovement(moveDirection.magnitude/2*sprintMultiplier);
+        Vector3 flatVelocity = playerRigidbody.linearVelocity;
+        flatVelocity.y = 0f;
+
+        if (flatVelocity.sqrMagnitude > 0.01f)
+        {
+            float dot = Vector3.Dot(transform.forward, flatVelocity.normalized);
+
+            // Only rotate if not strongly moving backwards
+            if (dot > -0.5f)   // adjust threshold if needed
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(flatVelocity);
+
+                Quaternion newRotation = Quaternion.Slerp(
+                    playerRigidbody.rotation,
+                    targetRotation,
+                    rotationSpeed * Time.fixedDeltaTime
+                );
+
+                playerRigidbody.MoveRotation(newRotation);
+            }
+        }
+
+        if(playerAnimation!=null) playerAnimation.SetMovement(moveDirection.magnitude/(moveSpeed*2)*sprintMultiplier);
     }
 
     private bool IsGrounded()
     {
         return Physics.Raycast(transform.position, Vector3.down, originalHeight);
+    }
+
+    public void MeshLookForward()
+    {
+        playerMesh.transform.rotation = transform.rotation;
     }
 
     private void StopGamepadVibration()
@@ -124,8 +154,12 @@ public class PlayerMovement : MonoBehaviour
 
     private void RotatePlayerMesh(Vector3 moveDirection)
     {
-        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(moveDirection == Vector3.zero ? transform.forward : moveDirection), Time.deltaTime * rotationSpeed);
-        // cameraPivot.rotation = transform.rotation;
+        Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+        playerMesh.transform.rotation = Quaternion.Slerp(
+            playerMesh.transform.rotation,
+            targetRotation,
+            meshRotationSpeed * Time.fixedDeltaTime
+        );
     }
 
     public void SetAiming(bool isAiming)
