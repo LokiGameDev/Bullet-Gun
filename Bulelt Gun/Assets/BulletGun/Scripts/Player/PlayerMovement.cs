@@ -98,7 +98,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if(cameraMovement.IsAiming) {return;}
+        if(cameraMovement.IsAiming)
+        {
+            transform.Rotate(0, movementInput.x, 0);
+            return;
+        }
 
         Vector3 moveDirection = ( (transform.forward * movementInput.y) + (transform.right * movementInput.x))* moveSpeed * sprintMultiplier * crouchMultiplier;
 
@@ -117,7 +121,7 @@ public class PlayerMovement : MonoBehaviour
             float dot = Vector3.Dot(transform.forward, flatVelocity.normalized);
 
             // Only rotate if not strongly moving backwards
-            if (dot > -0.5f)   // adjust threshold if needed
+            if (dot > -0.1f)   // adjust threshold if needed
             {
                 Quaternion targetRotation = Quaternion.LookRotation(flatVelocity);
 
