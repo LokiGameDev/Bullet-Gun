@@ -22,6 +22,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 movementInput;
     private Rigidbody playerRigidbody;
     private bool IsOnCrouch = false;
+    private bool canMove=true;
 
     private void Awake()
     {
@@ -35,6 +36,8 @@ public class PlayerMovement : MonoBehaviour
         inputReader.OnPlayerJump += HandlePlayerJump;
         inputReader.OnPlayerSprint += HandlePlayerSprint;
         inputReader.OnPlayerCrouch += HandlePlayerCrouch;
+        PlayerShooting.OnBulletSpawned += HandleBulletSpawn;
+        SpecialBullet.OnBulletDespawn += HandleBulletDespawn;
     }
 
     private void OnDisable()
@@ -43,6 +46,8 @@ public class PlayerMovement : MonoBehaviour
         inputReader.OnPlayerJump -= HandlePlayerJump;
         inputReader.OnPlayerSprint -= HandlePlayerSprint;
         inputReader.OnPlayerCrouch -= HandlePlayerCrouch;
+        PlayerShooting.OnBulletSpawned -= HandleBulletSpawn;
+        SpecialBullet.OnBulletDespawn -= HandleBulletDespawn;
     }
 
     private void HandlePlayerMovement(Vector2 movement)
@@ -91,6 +96,17 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    void HandleBulletSpawn(Transform bullet)
+    {
+        canMove = false;
+        playerAnimation.SetMovement(0);
+    }
+
+    void HandleBulletDespawn()
+    {
+        canMove = true;
+    }
+
     void Update()
     {
         playerAnimation.SetGrounded(IsGrounded());
@@ -98,6 +114,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if(!canMove) return;
+
         if(cameraMovement.IsAiming)
         {
             transform.Rotate(0, movementInput.x, 0);
@@ -119,9 +137,8 @@ public class PlayerMovement : MonoBehaviour
         if (flatVelocity.sqrMagnitude > 0.01f)
         {
             float dot = Vector3.Dot(transform.forward, flatVelocity.normalized);
-
-            // Only rotate if not strongly moving backwards
-            if (dot > -0.1f)   // adjust threshold if needed
+            
+            if (dot > -0.1f)
             {
                 Quaternion targetRotation = Quaternion.LookRotation(flatVelocity);
 
@@ -135,7 +152,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        if(playerAnimation!=null) playerAnimation.SetMovement(moveDirection.magnitude/(moveSpeed*2)*sprintMultiplier);
+        if(playerAnimation!=null) playerAnimation.SetMovement(moveDirection.magnitude/(moveSpeed*2*crouchMultiplier));
     }
 
     private bool IsGrounded()

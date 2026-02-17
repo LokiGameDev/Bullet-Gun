@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine.UI;
 using UnityEngine;
+using System;
 
 public class PlayerShooting : MonoBehaviour
 {
@@ -10,21 +11,21 @@ public class PlayerShooting : MonoBehaviour
     [SerializeField] private GameObject bulletPrefab;
     [SerializeField] private Image reloadImageFill;
 
-    [Header("Settings")]
-    [SerializeField] private float shootCooldown = 1f;
+    public static event Action<Transform> OnBulletSpawned;
 
     private bool canShoot;
-    private float shootTimer;
 
     private void OnEnable()
     {
         canShoot = true;
         inputReader.OnPlayerShoot += HandlePlayerAttack;
+        SpecialBullet.OnBulletDespawn += HandleBulletDespawn;
     }
 
     private void OnDisable()
     {
         inputReader.OnPlayerShoot -= HandlePlayerAttack;
+        SpecialBullet.OnBulletDespawn -= HandleBulletDespawn;
     }
 
     private void HandlePlayerAttack()
@@ -33,8 +34,7 @@ public class PlayerShooting : MonoBehaviour
         {
             Shoot();
             canShoot = false;
-            shootTimer = shootCooldown;
-            StartCoroutine(ResetShootCooldown());
+            reloadImageFill.fillAmount = 0;
         }
     }
 
@@ -42,17 +42,13 @@ public class PlayerShooting : MonoBehaviour
     {
         var bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
         bullet.GetComponent<SpecialBullet>().Initialize(firePoint.forward);
+        OnBulletSpawned?.Invoke(bullet.transform);
+        GameManager.Instance.BulletSpawned();
     }
 
-    IEnumerator ResetShootCooldown()
+    private void HandleBulletDespawn()
     {
-        reloadImageFill.fillAmount = 0f;
-        while(shootTimer > 0f)
-        {
-            shootTimer -= Time.deltaTime;
-            reloadImageFill.fillAmount = 1f - (shootTimer / shootCooldown);
-            yield return null;
-        }
         canShoot = true;
+        reloadImageFill.fillAmount = 1;
     }
 }
