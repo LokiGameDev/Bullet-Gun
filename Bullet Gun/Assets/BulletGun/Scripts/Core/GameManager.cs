@@ -21,6 +21,13 @@ public class GameManager : MonoBehaviour
     }
 
     public Transform cameraTransform;
+    public InputReader inputReader;
+    public GameObject player;
+
+    public void Start()
+    {
+        player.SetActive(true);
+    }
 
     public void BulletSpawned()
     {

@@ -4,10 +4,8 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
+    #region Variables
     [Header("References")]
-    [SerializeField] private InputReader inputReader;
-    [SerializeField] private PlayerAnimation playerAnimation;
-    [SerializeField] private CameraMovement cameraMovement;
     [SerializeField] private GameObject playerMesh;
 
     [Header("Settings")]
@@ -19,50 +17,48 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float jumpForce = 2.5f;
     [SerializeField] private float originalHeight = 0.95f;
 
+    private InputReader inputReader;
+    private Player player;
+
     private Vector2 movementInput;
     private Rigidbody playerRigidbody;
     private bool IsOnCrouch = false;
-    private bool canMove=true;
+
+    #endregion
 
     private void Awake()
     {
         playerRigidbody = GetComponent<Rigidbody>();
-        if(playerAnimation!=null) playerAnimation.SetMovement(0f);
+        player = GetComponent<Player>();
     }
 
     private void OnEnable()
     {
+        inputReader = GameManager.Instance.inputReader;
         inputReader.OnPlayerMovement += HandlePlayerMovement;
         inputReader.OnPlayerJump += HandlePlayerJump;
         inputReader.OnPlayerSprint += HandlePlayerSprint;
         inputReader.OnPlayerCrouch += HandlePlayerCrouch;
-        PlayerShooting.OnBulletSpawned += HandleBulletSpawn;
-        SpecialBullet.OnBulletDespawn += HandleBulletDespawn;
     }
-
     private void OnDisable()
     {
         inputReader.OnPlayerMovement -= HandlePlayerMovement;
         inputReader.OnPlayerJump -= HandlePlayerJump;
         inputReader.OnPlayerSprint -= HandlePlayerSprint;
         inputReader.OnPlayerCrouch -= HandlePlayerCrouch;
-        PlayerShooting.OnBulletSpawned -= HandleBulletSpawn;
-        SpecialBullet.OnBulletDespawn -= HandleBulletDespawn;
     }
-
     private void HandlePlayerMovement(Vector2 movement)
     {
         movementInput = movement;
     }
-
     private void HandlePlayerJump()
     {
-        if(cameraMovement.IsAiming) {return;}
+        if(player.isAiming) {return;}
 
         if(IsGrounded())
         {
             playerRigidbody.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-            playerAnimation.SetJumping();
+            player.playerAnimation.SetJumping();
             if(Gamepad.current != null)
             {
                 Gamepad.current.SetMotorSpeeds(0.5f, 1f);
@@ -70,53 +66,36 @@ public class PlayerMovement : MonoBehaviour
             }
         }
     }
-
     private void HandlePlayerSprint(bool isSprinting)
     {
-        if(IsOnCrouch) return;
+        if(IsOnCrouch || player.isAiming) return;
         sprintMultiplier = isSprinting ? 2f : 1f;
     }
-
     private void HandlePlayerCrouch(bool isCrouching)
     {
-        if(cameraMovement.IsAiming) {return;}
+        if(player.isAiming) {return;}
         
         if(isCrouching)
         {
-            playerAnimation.SetCrouching(true);
             crouchMultiplier = 0.5f;
             sprintMultiplier = 1f;
             IsOnCrouch = true;
         }
         else
         {
-            playerAnimation.SetCrouching(false);
             crouchMultiplier = 1f;
             IsOnCrouch = false;
         }
     }
-
-    void HandleBulletSpawn(Transform bullet)
-    {
-        canMove = false;
-        playerAnimation.SetMovement(0);
-    }
-
-    void HandleBulletDespawn()
-    {
-        canMove = true;
-    }
-
     void Update()
     {
-        playerAnimation.SetGrounded(IsGrounded());
+        player.playerAnimation.SetGrounded(IsGrounded());
     }
-
     private void FixedUpdate()
     {
-        if(!canMove) return;
+        if(!player.canMove) return;
 
-        if(cameraMovement.IsAiming)
+        if(player.isAiming)
         {
             transform.Rotate(0, movementInput.x, 0);
             return;
@@ -131,6 +110,32 @@ public class PlayerMovement : MonoBehaviour
             RotatePlayerMesh(moveDirection);
         }
 
+        PlayerMeshRotation();
+
+        if(player.playerAnimation!=null) player.playerAnimation.SetMovement(moveDirection.magnitude/(moveSpeed*2*crouchMultiplier));
+    }
+    private bool IsGrounded()
+    {
+        return Physics.Raycast(transform.position, Vector3.down, originalHeight);
+    }
+    private void StopGamepadVibration()
+    {
+        if(Gamepad.current != null)
+        {
+            Gamepad.current.SetMotorSpeeds(0f, 0f);
+        }
+    }
+    private void RotatePlayerMesh(Vector3 moveDirection)
+    {
+        Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+        playerMesh.transform.rotation = Quaternion.Slerp(
+            playerMesh.transform.rotation,
+            targetRotation,
+            meshRotationSpeed * Time.fixedDeltaTime
+        );
+    }
+    private void PlayerMeshRotation()
+    {
         Vector3 flatVelocity = playerRigidbody.linearVelocity;
         flatVelocity.y = 0f;
 
@@ -151,43 +156,7 @@ public class PlayerMovement : MonoBehaviour
                 playerRigidbody.MoveRotation(newRotation);
             }
         }
-
-        if(playerAnimation!=null) playerAnimation.SetMovement(moveDirection.magnitude/(moveSpeed*2*crouchMultiplier));
     }
-
-    private bool IsGrounded()
-    {
-        return Physics.Raycast(transform.position, Vector3.down, originalHeight);
-    }
-
-    public void MeshLookForward()
-    {
-        playerMesh.transform.rotation = transform.rotation;
-    }
-
-    private void StopGamepadVibration()
-    {
-        if(Gamepad.current != null)
-        {
-            Gamepad.current.SetMotorSpeeds(0f, 0f);
-        }
-    }
-
-    private void RotatePlayerMesh(Vector3 moveDirection)
-    {
-        Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-        playerMesh.transform.rotation = Quaternion.Slerp(
-            playerMesh.transform.rotation,
-            targetRotation,
-            meshRotationSpeed * Time.fixedDeltaTime
-        );
-    }
-
-    public void SetAiming(bool isAiming)
-    {
-        playerAnimation.SetAiming(isAiming);
-    }
-
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;

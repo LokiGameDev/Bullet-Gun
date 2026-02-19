@@ -1407,13 +1407,14 @@ GameObject:
   - component: {fileID: 1221038969}
   - component: {fileID: 1221038970}
   - component: {fileID: 1221038971}
+  - component: {fileID: 1221038972}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!136 &1221038965
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -1494,8 +1495,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 637212c0ba051c0438aee0041f117ae4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  inputReader: {fileID: 11400000, guid: c1acbc976e97dea41bb4bed1175186bd, type: 2}
-  playerAnimation: {fileID: 919132148154990817}
   cameraMovement: {fileID: 2095457967}
   playerMesh: {fileID: 919132148154990815}
   moveSpeed: 2
@@ -1521,6 +1520,19 @@ MonoBehaviour:
   firePoint: {fileID: 1366128136}
   bulletPrefab: {fileID: 4879777867505624757, guid: 15430844d6a3f404f956f8391bdc07fa, type: 3}
   reloadImageFill: {fileID: 366788117}
+--- !u!114 &1221038972
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1221038964}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e744c6fad4ba76b4eae1a21957cc2e9a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDetails
+  playerAnimation: {fileID: 919132148154990817}
 --- !u!1 &1285651914
 GameObject:
   m_ObjectHideFlags: 0
@@ -1551,6 +1563,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   cameraTransform: {fileID: 2095457966}
+  inputReader: {fileID: 11400000, guid: c1acbc976e97dea41bb4bed1175186bd, type: 2}
+  player: {fileID: 1221038964}
 --- !u!4 &1285651916
 Transform:
   m_ObjectHideFlags: 0
@@ -1985,6 +1999,8 @@ MonoBehaviour:
   mouseSensitivity: 60
   normalCameraOffset: {x: 0.5, y: 1, z: -3.5}
   aimCameraOffset: {x: 0.5, y: 0.75, z: -1}
+  bulletCameraOffset: {x: 0, y: 0.2, z: -1}
+  bulletAimCameraOffset: {x: 0, y: 0.15, z: -0.5}
 --- !u!1 &2108073541
 GameObject:
   m_ObjectHideFlags: 0

@@ -15,8 +15,6 @@ public class InputReader : ScriptableObject, IPlayerActions
     public event Action OnPlayerShoot;
     public event Action OnPlayerLook;
     public event Action OnPlayerJump;
-    // public event Action OnPlayerAttack;
-    // public event Action OnPlayerInteract;
     #endregion
 
     #region Input Values
