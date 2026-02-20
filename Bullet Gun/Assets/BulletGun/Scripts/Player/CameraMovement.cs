@@ -6,13 +6,13 @@ public class CameraMovement : MonoBehaviour
     [Header("References")]
     [SerializeField] private InputReader inputReader;
     [SerializeField] private Transform cameraTransform;
+    [SerializeField] private Player player;
 
     [Header("Settings")]
     [SerializeField] private float mouseSensitivity = 60;
 
     public Transform currentTarget;
     public Vector3 currentCameraOffset;
-    private Player player;
     private Vector2 lookInput;
 
     float yaw;
@@ -36,7 +36,10 @@ public class CameraMovement : MonoBehaviour
 
     private void LateUpdate()
     {
-        if(currentTarget==null) return;
+        if(currentTarget==null)
+        {
+            currentTarget = player.gameObject.transform;   
+        }
         
         yaw += lookInput.x * mouseSensitivity * Time.deltaTime;
         
@@ -58,7 +61,8 @@ public class CameraMovement : MonoBehaviour
         }
 
         transform.position = currentTarget.position;
-        cameraTransform.localPosition = Vector3.Lerp(cameraTransform.localPosition, currentCameraOffset, Time.deltaTime * 10f);
+        // cameraTransform.localPosition = Vector3.Lerp(cameraTransform.localPosition, currentCameraOffset, Time.deltaTime * 10f);
+        cameraTransform.localPosition = currentCameraOffset;
     }
 
 

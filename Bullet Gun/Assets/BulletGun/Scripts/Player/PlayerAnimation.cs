@@ -36,4 +36,9 @@ public class PlayerAnimation : MonoBehaviour
     {
         playerAnimator.SetBool("Aiming", isAiming);
     }
+
+    public void PlayerMeshLookForward(Quaternion rotation)
+    {
+        transform.rotation = rotation;
+    }
 }

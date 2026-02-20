@@ -31,11 +31,16 @@ public class GameManager : MonoBehaviour
 
     public void BulletSpawned()
     {
-        Time.timeScale = 0.25f;
+        Time.timeScale = 0.15f;
     }
 
     public void BulletDespawned()
     {
         Time.timeScale = 1;
+    }
+
+    public void SetTimeScale(float value)
+    {
+        Time.timeScale = value;
     }
 }

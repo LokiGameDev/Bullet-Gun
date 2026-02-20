@@ -73,18 +73,25 @@ public class PlayerMovement : MonoBehaviour
     }
     private void HandlePlayerCrouch(bool isCrouching)
     {
-        if(player.isAiming) {return;}
+        if(player.isAiming)
+        {
+            crouchMultiplier = 1f;
+            IsOnCrouch = false;
+            player.playerAnimation.SetCrouching(false);
+        }
         
         if(isCrouching)
         {
             crouchMultiplier = 0.5f;
             sprintMultiplier = 1f;
             IsOnCrouch = true;
+            player.playerAnimation.SetCrouching(true);
         }
         else
         {
             crouchMultiplier = 1f;
             IsOnCrouch = false;
+            player.playerAnimation.SetCrouching(false);
         }
     }
     void Update()

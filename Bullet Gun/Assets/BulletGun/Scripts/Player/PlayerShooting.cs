@@ -15,8 +15,6 @@ public class PlayerShooting : MonoBehaviour
     [SerializeField] private Vector3 playerCameraAimOffset;
     [SerializeField] private Vector3 bulletCameraNormalOffset;
     [SerializeField] private Vector3 bulletCameraAimOffset;
-    
-    public static event Action<Transform> OnBulletSpawned;
 
     private bool canShoot;
     private InputReader inputReader;
@@ -26,6 +24,9 @@ public class PlayerShooting : MonoBehaviour
     {
         canShoot = true;
         player = GetComponent<Player>();
+        player.SetCurrentActionObject(true);
+        player.mainCamera.currentTarget = player.transform;
+        player.mainCamera.currentCameraOffset = playerCameraNormalOffset;
     }
 
     private void OnEnable()
@@ -33,12 +34,14 @@ public class PlayerShooting : MonoBehaviour
         inputReader = GameManager.Instance.inputReader;
         inputReader.OnPlayerShoot += HandlePlayerAttack;
         inputReader.OnPlayerAim += HandlePlayerAim;
+        SpecialBullet.OnBulletDespawn += HandleBulletDespawn;
     }
 
     private void OnDisable()
     {
         inputReader.OnPlayerShoot -= HandlePlayerAttack;
         inputReader.OnPlayerAim -= HandlePlayerAim;
+        SpecialBullet.OnBulletDespawn -= HandleBulletDespawn;
     }
 
     private void HandlePlayerAttack()
@@ -51,25 +54,36 @@ public class PlayerShooting : MonoBehaviour
             canShoot = false;
             StartCoroutine(PlayerShootDelay(1));
         }
-        else
-        {
-            BulletShoot();
-            canShoot = false;
-            StartCoroutine(PlayerShootDelay(3));
-        }
     }
 
     private void HandlePlayerAim(bool status)
     {
         if(status)
         {
-            if(player.isPlayerOnAction) player.mainCamera.currentCameraOffset = playerCameraAimOffset;
-            else player.mainCamera.currentCameraOffset = bulletCameraAimOffset;
+            if(player.isPlayerOnAction)
+            {
+                player.mainCamera.currentCameraOffset = playerCameraAimOffset;
+                player.playerAnimation.SetAiming(true);
+                player.playerAnimation.PlayerMeshLookForward(transform.rotation);
+            }
+            else
+            {
+                player.mainCamera.currentCameraOffset = bulletCameraAimOffset;
+                GameManager.Instance.SetTimeScale(0.05f);
+            }
         }
         else
         {
-            if(player.isPlayerOnAction) player.mainCamera.currentCameraOffset = playerCameraNormalOffset;
-            else player.mainCamera.currentCameraOffset = bulletCameraNormalOffset;
+            if(player.isPlayerOnAction)
+            {
+                player.mainCamera.currentCameraOffset = playerCameraNormalOffset;
+            }
+            else
+            {
+                player.mainCamera.currentCameraOffset = bulletCameraNormalOffset;
+                GameManager.Instance.SetTimeScale(0.15f);
+            }
+            player.playerAnimation.SetAiming(false);
         }
         player.SetPlayerAimStatus(status);
     }
@@ -78,8 +92,8 @@ public class PlayerShooting : MonoBehaviour
     {
         var bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
         bullet.GetComponent<SpecialBullet>().Initialize(firePoint.forward);
-        OnBulletSpawned?.Invoke(bullet.transform);
-        GameManager.Instance.BulletSpawned();
+        reloadImageFill.fillAmount = 0;
+        BulletSpawned(bullet);
     }
 
     private void BulletShoot()
@@ -87,9 +101,26 @@ public class PlayerShooting : MonoBehaviour
         
     }
 
+    private void BulletSpawned(GameObject bullet)
+    {
+        player.SetCurrentActionObject(false);
+        player.mainCamera.currentTarget = bullet.transform;
+        player.mainCamera.currentCameraOffset = bulletCameraNormalOffset;
+        GameManager.Instance.BulletSpawned();
+    }
+
+    private void HandleBulletDespawn()
+    {
+        player.SetCurrentActionObject(true);
+        player.mainCamera.currentTarget = player.transform;
+        player.mainCamera.currentCameraOffset = playerCameraNormalOffset;
+        GameManager.Instance.BulletDespawned();
+    }
+
     private IEnumerator PlayerShootDelay(float sec)
     {
         yield return new WaitForSeconds(sec);
         canShoot = true;
+        reloadImageFill.fillAmount = 1;
     }
 }
