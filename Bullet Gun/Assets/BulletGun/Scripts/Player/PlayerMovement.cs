@@ -50,6 +50,7 @@ public class PlayerMovement : MonoBehaviour
     private void HandlePlayerMovement(Vector2 movement)
     {
         movementInput = movement;
+        player.SetMovementStatus(movement.magnitude > 0);
     }
     private void HandlePlayerJump()
     {
@@ -108,7 +109,13 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        Vector3 moveDirection = ( (transform.forward * movementInput.y) + (transform.right * movementInput.x))* moveSpeed * sprintMultiplier * crouchMultiplier;
+        if(player.isLookChanged && player.isMoving)
+        {
+            transform.rotation = player.GetLookingDirection();
+            player.isLookChanged = false;
+        }
+
+        Vector3 moveDirection = ((transform.forward * movementInput.y) + (transform.right * movementInput.x))* moveSpeed * sprintMultiplier * crouchMultiplier;
 
         playerRigidbody.linearVelocity = new Vector3(moveDirection.x, playerRigidbody.linearVelocity.y, moveDirection.z);
 

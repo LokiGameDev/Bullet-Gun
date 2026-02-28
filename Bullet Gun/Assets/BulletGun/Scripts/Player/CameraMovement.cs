@@ -14,6 +14,7 @@ public class CameraMovement : MonoBehaviour
     public Transform currentTarget;
     public Vector3 currentCameraOffset;
     private Vector2 lookInput;
+    private Quaternion bulletRotation;
 
     float yaw;
     float xRotation = 0;
@@ -50,14 +51,23 @@ public class CameraMovement : MonoBehaviour
 
         if(player.isPlayerOnAction)
         {
-            transform.rotation = currentTarget.rotation * Quaternion.Euler(0, yaw, 0f);  
+            if(player.isMoving)
+            {
+                transform.rotation = currentTarget.rotation * Quaternion.Euler(0, yaw, 0f);
+            }
+            else 
+            {
+                transform.rotation = transform.rotation * Quaternion.Euler(0, lookInput.x, 0);
+                player.lookingDirection = transform.rotation;
+                player.isLookChanged = true;
+            }
         }
         else
         {
             xRotation -= lookInput.y;
             yRotation += lookInput.x;
             xRotation = Mathf.Clamp(xRotation, -30f, 30f);
-            transform.rotation = Quaternion.Euler(xRotation, yRotation, 0);
+            transform.rotation = Quaternion.Euler(xRotation, bulletRotation.y + yRotation, 0);
         }
 
         transform.position = currentTarget.position;
@@ -65,5 +75,8 @@ public class CameraMovement : MonoBehaviour
         cameraTransform.localPosition = currentCameraOffset;
     }
 
-
+    public void SetCameraRotation(Quaternion rotation)
+    {
+        bulletRotation = rotation;
+    }
 }

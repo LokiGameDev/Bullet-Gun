@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -6,7 +7,11 @@ public class Player : MonoBehaviour
     public PlayerAnimation playerAnimation;
     public bool canMove { get; private set; }
     public bool isAiming { get; private set; }
+    [field:SerializeField] public bool isMoving { get; private set; }
     public bool isPlayerOnAction { get; private set; }
+
+    public Quaternion lookingDirection;
+    public bool isLookChanged = false;
 
     void Awake()
     {
@@ -30,6 +35,11 @@ public class Player : MonoBehaviour
         isPlayerOnAction = isPlayer;
     }
 
+    public void SetMovementStatus(bool status)
+    {
+        isMoving = status;
+    }
+
     public void SetMainCameraTarget(Transform target)
     {
         mainCamera.currentTarget = target;
@@ -38,5 +48,15 @@ public class Player : MonoBehaviour
     public void SetMainCameraOffset(Vector3 offset)
     {
         mainCamera.currentCameraOffset = offset;
+    }
+
+    public void SetMainCameraRotation(Quaternion rotation)
+    {
+        mainCamera.SetCameraRotation(rotation);
+    }
+
+    public Quaternion GetLookingDirection()
+    {
+        return lookingDirection;
     }
 }

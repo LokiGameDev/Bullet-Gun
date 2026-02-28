@@ -94,6 +94,7 @@ public class PlayerShooting : MonoBehaviour
         bullet.GetComponent<SpecialBullet>().Initialize(firePoint.forward);
         reloadImageFill.fillAmount = 0;
         BulletSpawned(bullet);
+        player.SetMainCameraRotation(bullet.transform.rotation);
     }
 
     private void BulletShoot()
